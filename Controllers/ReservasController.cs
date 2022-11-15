@@ -10,6 +10,8 @@ using Reservas.API.Entidades;
 
 namespace Reservas.API.Controllers
 {
+    [Route("/api/reservas/v1")]
+    [ApiController]
     public class ReservasController : Controller
     {
         #region Miembros privados de la clase
