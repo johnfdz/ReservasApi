@@ -1,0 +1,120 @@
+# ------------------- Route  ------------------- #
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: distclientes-route
+  namespace: ocp-qa
+spec:
+  host: distclientes.qa.apps.ocp4mqa.grupodifare.com
+  to:
+    kind: Service
+    name: distclientes-services
+  port:
+    targetPort: http
+---
+# ------------------- Service ------------------- #
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: distclientes
+  name: distclientes-services
+  namespace: ocp-qa
+spec:
+  ports:
+    - name: http
+      protocol: TCP 
+      port: 2202
+      targetPort: 80
+  selector:
+    app: distclientes
+---
+# ------------------ Deployment ----------------- #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: distclientes
+  name: distclientes-deploy
+  namespace: ocp-qa
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: distclientes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+  minReadySeconds: 2
+  template:
+    metadata:
+      labels:
+        app: distclientes
+    spec:
+      serviceAccountName: default
+      nodeSelector:
+        QA: "TRUE"
+      containers:
+      - name: distclientes
+        image: dockernp.grupodifare.com/qa-distclientes-image
+        resources:
+          limits:
+            cpu: "250m"
+            memory: 256Mi
+          requests:
+            cpu: "50m"
+            memory: 64Mi
+        ports:
+        - containerPort: 80
+          name: distclientes
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health/
+            port: 80
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health/
+            port: 80
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+          periodSeconds: 20
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: sqanep03-config
+                key: ASPNETCORE_ENVIRONMENT
+          - name: DATABASE_CLIE
+            valueFrom:
+              configMapKeyRef:
+                name: sqanep03-config
+                key: DATABASE_CLIE
+          - name: DATABASE_CXC
+            valueFrom:
+              configMapKeyRef:
+                name: sqanep03-config
+                key: DATABASE_CXC
+          - name: DATABASE_PARA
+            valueFrom:
+              configMapKeyRef:
+                name: sqanep03-config
+                key: DATABASE_PARA
+          - name: ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: sqanep03-config
+                key: ELASTICSEARCH
+          - name: SERVICE_TRACE_LEVEL_LOG
+            valueFrom:
+              configMapKeyRef:
+                name: sqanep03-config
+                key: SERVICE_TRACE_LEVEL_LOG
+      imagePullSecrets:
+       - name: nexus-secret

@@ -1,0 +1,6 @@
+@Library('dif-jenkins-shared-library') _
+
+uatPipeline {
+  name = "distclientes"
+  namespace = "ocp-uat"
+}

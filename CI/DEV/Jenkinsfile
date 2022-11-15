@@ -1,0 +1,6 @@
+@Library('dif-jenkins-shared-library') _
+
+devPipeline {
+  name = "distclientes"
+  namespace = "ocp-dev"
+}
